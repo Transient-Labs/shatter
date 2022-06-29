@@ -1,4 +1,5 @@
-from brownie import Shatter, accounts, reverts, chain
+from brownie import ShatterCoreV1, ShatterCreatorV1Test, accounts, reverts, chain
+from brownie.network.contract import Contract
 import pytest
 import base64
 import json
@@ -9,10 +10,6 @@ img = "ipfs://IMAGE"
 anim = "ipfs://ANIM"
 trait_names = ["T1", "T2", "T3"]
 trait_values = ["V1", "V2", "V3"]
-
-@pytest.fixture(scope="class")
-def contract():
-    return Shatter.deploy("Test", "TST", accounts[1].address, 500, accounts[2].address, 1, 100, shatter_time, {"from": accounts[0]})
 
 def get_uri(contract, token_id):
     uri = contract.tokenURI(token_id)[29:].encode("utf-8")
@@ -25,6 +22,15 @@ def get_trait_dict(attributes):
     for attribute in attributes:
         traits[attribute["trait_type"]] = attribute["value"]
     return traits
+
+@pytest.fixture(scope="class")
+def logic_contract():
+    return ShatterCoreV1.deploy({"from": accounts[9]})
+
+@pytest.fixture(scope="class")
+def contract(logic_contract):
+    proxy_contract = ShatterCreatorV1Test.deploy(logic_contract.address, "Test", "TST", accounts[1].address, 500, 1, 100, shatter_time, {"from": accounts[0]})
+    return Contract.from_abi("ShatterContract", proxy_contract.address, logic_contract.abi)
 
 class TestDefault:
 
@@ -57,63 +63,11 @@ class TestInterface:
     
 class TestNoAccess:
 
-    def test_set_royalty_info_non_admin_owner(self, contract):
-        with reverts("Address not admin or owner"):
-            contract.setRoyaltyInfo(accounts[3].address, 750, {"from": accounts[3]})
-
-    def test_set_admin_address_non_owner(self, contract):
-        with reverts("Ownable: caller is not the owner"):
-            contract.setAdminAddress(accounts[1].address, {"from": accounts[2]})
-            contract.setAdminAddress(accounts[1].address, {"from": accounts[3]})
-
-    def test_set_description_non_admin_owner(self, contract):
-        with reverts("Address not admin or owner"):
-            contract.setDescription("Super interesting description", {"from": accounts[3]})
-
-    def test_set_traits_non_admin_owner(self, contract):
-        with reverts("Address not admin or owner"):
-            contract.setTraits(["T1"], ["V1"], {"from": accounts[3]})
-
     def test_mint_non_admin_owner(self, contract):
-        with reverts("Address not admin or owner"):
+        with reverts("Ownable: caller is not the owner"):
             contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[3]})
 
-class TestAdminAccess:
-    def test_set_royalty_info(self, contract):
-        contract.setRoyaltyInfo(accounts[3].address, 750, {"from": accounts[2]})
-        (recp, amt) = contract.royaltyInfo(1, 1000)
-        assert recp == accounts[3].address and amt == 1000*0.075
-    
-    def test_mint(self, contract):
-        contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[2]})
-        assert contract.ownerOf(0) == accounts[0].address
-
-    def test_set_description(self, contract):
-        contract.setDescription("Super awesome description", {"from": accounts[2]})
-
-    def test_set_traits(self, contract):
-        contract.setTraits(["T1"], ["V1"], {"from": accounts[2]})
-
-    def test_shatter(self, contract):
-        with reverts("Caller is not owner of token 0"):
-            contract.shatter(10, {"from": accounts[2]})
-
-    def test_fuse(self, contract):
-        with reverts("Can't fuse if not already shattered"):
-            contract.fuse({"from": accounts[2]})
-
 class TestOwnerAccess:
-
-    def test_set_royalty_info(self, contract):
-        contract.setRoyaltyInfo(accounts[3].address, 750, {"from": accounts[0]})
-        (recp, amt) = contract.royaltyInfo(1, 1000)
-        assert recp == accounts[3].address and amt == 1000*0.075
-
-    def test_set_description(self, contract):
-        contract.setDescription("Super awesome description", {"from": accounts[0]})
-
-    def test_set_traits(self, contract):
-        contract.setTraits(["T1"], ["V1"], {"from": accounts[0]})
     
     def test_mint(self, contract):
         contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[0]})
