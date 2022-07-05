@@ -24,6 +24,5 @@ contract ShatterCreatorV1Test is ERC1967Proxy {
             "initialize(string,string,address,uint256,uint256,uint256,uint256)",
             _name, _symbol, _royaltyRecipient, _royaltyPercentage,  _minShatters, _maxShatters, _shatterTime))
         {
-
         }
 }

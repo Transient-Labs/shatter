@@ -37,6 +37,7 @@ class TestDefault:
     def test_default_values(self, contract):
         recp, amt = contract.royaltyInfo(1, 10000)
         assert (
+            contract.owner() == accounts[0].address and
             contract.name() == "Test" and
             contract.symbol() == "TST" and
             contract.minShatters() == 1 and

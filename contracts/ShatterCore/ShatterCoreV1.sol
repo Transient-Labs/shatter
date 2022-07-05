@@ -168,9 +168,9 @@ contract ShatterCoreV1 is ERC721AUpgradeable, EIP2981AllToken, OwnableUpgradeabl
                 abi.encodePacked(
                     "data:application/json;base64,",
                     Base64Upgradeable.encode(bytes(abi.encodePacked(
-                        '{"name": "', name, '",',
-                        '"description": "', description, '",',
-                        '"attributes": ', attr, ',',
+                        unicode'{"name": "', name, '",',
+                        unicode'"description": "', description, '",',
+                        unicode'"attributes": ', attr, ',',
                         '"image": "', image, '"}'
                     )))
                 )
@@ -180,9 +180,9 @@ contract ShatterCoreV1 is ERC721AUpgradeable, EIP2981AllToken, OwnableUpgradeabl
                 abi.encodePacked(
                     "data:application/json;base64,",
                     Base64Upgradeable.encode(bytes(abi.encodePacked(
-                        '{"name": "', name, '",',
-                        '"description": "', description, '",',
-                        '"attributes": ', attr, ',',
+                        unicode'{"name": "', name, '",',
+                        unicode'"description": "', description, '",',
+                        unicode'"attributes": ', attr, ',',
                         '"image": "', image, '",',
                         '"animation_url": "', animationUrl, '"}'
                     )))

@@ -7,6 +7,6 @@ pragma solidity ^0.8.9;
 
 import "OpenZeppelin/openzeppelin-contracts@4.6.0/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-contract ShatterRegistry is ERC1967Proxy {
-    constructor() ERC1967Proxy(address(0), abi.encodeWithSignature("initialize()")) {}
+contract ShatterRegistryTest is ERC1967Proxy {
+    constructor(address _impAddr) ERC1967Proxy(_impAddr, abi.encodeWithSignature("initialize()")) {}
 }

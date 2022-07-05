@@ -25,14 +25,30 @@ The `ShatterCore` folder contains contracts representing the logic layer of the 
 The `ShatterCreator` folder contains contracts representing the proxy layer of the proxy-pattern. It uses ERC1967 for the proxy implementation slots. There are official and test versions. The test versions are only for local development testing and shall not be deployed to any running blockchain. You'll notice that the official creator contracts also register the proxy address in the Shatter Registry (more on this below).
 
 ##### Official ShatterCore Implementations
+| Network | Address | Version |
+| :-----: | :-----: | :-----: |
+| Mainnet |  | 1 |
+| Rinkeby | 0x3fca9Ff8E92EE202AB541290bFb8aA143052ef0F | 1 |
 
 #### ShatterRegistry
 Transient Labs has implemented an on-chain registry to authenticate official Shatter contracts. Simply implementing a shatter interface does not stop people from changing core logic and frauding collectors. This is why we have chosen this route.
 
 The Shatter Registry also implements a proxy-pattern but one that is upgradeable. There is the registry interface and then the engine that actually provides the logic layer for the registry. The reason for making this upgradeable is that we anticipate more features to be needed, as the product develops.
 
+##### Official ShatterRegistry Implementations
+| Network | Address |
+| :-----: | :-----: |
+| Mainnet |  |
+| Rinkeby | 0xFa72C510E819cA0C142Ce91973fC2f0739148dEC |
+
+##### Official ShatterEngine Implementations
+| Network | Address | Engine Version |
+| :-----: | :-----: | :------------: |
+| Mainnet |  | V1 |
+| Rinkeby | 0xF16067FBa7f6177c39dc2c03049408b8D7E8EB92 | V1 |
+
 ## Tests
 The tests must be run separate as some tests alter the blockchain timestamp which can cause other test files to fail inadvertently. This can be worked on in the future but is not a great concern at the moment.
 
 ## License
-Everything is licensed under GPL-3.0
+This project is licensed under GPL-3.0

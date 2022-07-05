@@ -113,8 +113,8 @@ contract Shatter is ERC721A, EIP2981AllToken, Ownable {
     }
 
     /// @notice function for minting the 1/1 to the owner's address
-    /// @dev requires contract owner
-    /// @dev sets the description, image, animation url (if exists), and traits for the piece - this cannot be changed later
+    /// @dev requires contract owner or admin
+    /// @dev sets the description, image, animation url (if exists), and traits for the piece
     /// @dev requires that shatters is equal to 0 -> meaning no piece has been minted
     /// @dev using _mint function as owner() should always be an EOA or trusted entity
     function mint(string calldata _description, string calldata _image, string calldata _animationUrl,
@@ -207,9 +207,9 @@ contract Shatter is ERC721A, EIP2981AllToken, Ownable {
                 abi.encodePacked(
                     "data:application/json;base64,",
                     Base64.encode(bytes(abi.encodePacked(
-                        '{"name": "', name, '",',
-                        '"description": "', description, '",',
-                        '"attributes": ', attr, ',',
+                        unicode'{"name": "', name, '",',
+                        unicode'"description": "', description, '",',
+                        unicode'"attributes": ', attr, ',',
                         '"image": "', image, '"}'
                     )))
                 )
@@ -219,9 +219,9 @@ contract Shatter is ERC721A, EIP2981AllToken, Ownable {
                 abi.encodePacked(
                     "data:application/json;base64,",
                     Base64.encode(bytes(abi.encodePacked(
-                        '{"name": "', name, '",',
-                        '"description": "', description, '",',
-                        '"attributes": ', attr, ',',
+                        unicode'{"name": "', name, '",',
+                        unicode'"description": "', description, '",',
+                        unicode'"attributes": ', attr, ',',
                         '"image": "', image, '",',
                         '"animation_url": "', animationUrl, '"}'
                     )))
