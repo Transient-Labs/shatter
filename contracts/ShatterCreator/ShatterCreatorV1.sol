@@ -25,10 +25,10 @@ contract ShatterCreatorV1 is ERC1967Proxy {
     constructor(bytes memory _sig, bytes32 _nonce, string memory _name, string memory _symbol,
         address _royaltyRecipient, uint256 _royaltyPercentage,
         uint256 _minShatters, uint256 _maxShatters, uint256 _shatterTime)
-        ERC1967Proxy(0x3fca9Ff8E92EE202AB541290bFb8aA143052ef0F, abi.encodeWithSignature(
+        ERC1967Proxy(, abi.encodeWithSignature(
             "initialize(string,string,address,uint256,uint256,uint256,uint256)",
             _name, _symbol, _royaltyRecipient, _royaltyPercentage,  _minShatters, _maxShatters, _shatterTime))
         {
-            ShatterRegistry(0xFa72C510E819cA0C142Ce91973fC2f0739148dEC).register(msg.sender, 1, _nonce, _sig);
+            ShatterRegistry().register(msg.sender, 1, _nonce, _sig);
         }
 }
