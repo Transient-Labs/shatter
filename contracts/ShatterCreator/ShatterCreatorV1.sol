@@ -19,16 +19,17 @@ contract ShatterCreatorV1 is ERC1967Proxy {
     /// @param _symbol is the symbol
     /// @param _royaltyRecipient is the royalty recipient
     /// @param _royaltyPercentage is the royalty percentage to set
-    /// @param _minShatters is the minimum number of replicates
-    /// @param _maxShatters is the maximum number of replicates
+    /// @param _admin is the admin address
+    /// @param _minShatters is the minimum number of editions
+    /// @param _maxShatters is the maximum number of editions
     /// @param _shatterTime is time after which replication can occur
     constructor(bytes memory _sig, bytes32 _nonce, string memory _name, string memory _symbol,
-        address _royaltyRecipient, uint256 _royaltyPercentage,
+        address _royaltyRecipient, uint256 _royaltyPercentage, address _admin,
         uint256 _minShatters, uint256 _maxShatters, uint256 _shatterTime)
-        ERC1967Proxy(address(0), abi.encodeWithSignature(
-            "initialize(string,string,address,uint256,uint256,uint256,uint256)",
-            _name, _symbol, _royaltyRecipient, _royaltyPercentage,  _minShatters, _maxShatters, _shatterTime))
+        ERC1967Proxy(0x30ADc1c2911D02202a5e0Bc9A1E411040939afce, abi.encodeWithSignature(
+            "initialize(string,string,address,uint256,address,uint256,uint256,uint256)",
+            _name, _symbol, _royaltyRecipient, _royaltyPercentage, _admin, _minShatters, _maxShatters, _shatterTime))
         {
-            ShatterRegistry(address(0)).register(msg.sender, 1, _nonce, _sig);
+            ShatterRegistry(0xFa72C510E819cA0C142Ce91973fC2f0739148dEC).register(msg.sender, 1, _nonce, _sig);
         }
 }

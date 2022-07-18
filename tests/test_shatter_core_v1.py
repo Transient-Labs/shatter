@@ -29,7 +29,7 @@ def logic_contract():
 
 @pytest.fixture(scope="class")
 def contract(logic_contract):
-    proxy_contract = ShatterCreatorV1Test.deploy(logic_contract.address, "Test", "TST", accounts[1].address, 500, 1, 100, shatter_time, {"from": accounts[0]})
+    proxy_contract = ShatterCreatorV1Test.deploy(logic_contract.address, "Test", "TST", accounts[1].address, 500, accounts[2].address, 1, 100, shatter_time, {"from": accounts[0]})
     return Contract.from_abi("ShatterContract", proxy_contract.address, logic_contract.abi)
 
 class TestDefault:
@@ -37,12 +37,12 @@ class TestDefault:
     def test_default_values(self, contract):
         recp, amt = contract.royaltyInfo(1, 10000)
         assert (
-            contract.owner() == accounts[0].address and
             contract.name() == "Test" and
             contract.symbol() == "TST" and
             contract.minShatters() == 1 and
             contract.maxShatters() == 100 and
             contract.shatterTime() == shatter_time and
+            contract.admin() == accounts[2].address and
             recp == accounts[1].address and
             amt == 500
         )
@@ -64,11 +64,63 @@ class TestInterface:
     
 class TestNoAccess:
 
-    def test_mint_non_admin_owner(self, contract):
+    def test_set_royalty_info_non_admin_owner(self, contract):
+        with reverts("Address not admin or owner"):
+            contract.setRoyaltyInfo(accounts[3].address, 750, {"from": accounts[3]})
+
+    def test_set_admin_address_non_owner(self, contract):
         with reverts("Ownable: caller is not the owner"):
+            contract.setAdminAddress(accounts[1].address, {"from": accounts[2]})
+            contract.setAdminAddress(accounts[1].address, {"from": accounts[3]})
+
+    def test_set_description_non_admin_owner(self, contract):
+        with reverts("Address not admin or owner"):
+            contract.setDescription("Super interesting description", {"from": accounts[3]})
+
+    def test_set_traits_non_admin_owner(self, contract):
+        with reverts("Address not admin or owner"):
+            contract.setTraits(["T1"], ["V1"], {"from": accounts[3]})
+
+    def test_mint_non_admin_owner(self, contract):
+        with reverts("Address not admin or owner"):
             contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[3]})
 
+class TestAdminAccess:
+    def test_set_royalty_info(self, contract):
+        contract.setRoyaltyInfo(accounts[3].address, 750, {"from": accounts[2]})
+        (recp, amt) = contract.royaltyInfo(1, 1000)
+        assert recp == accounts[3].address and amt == 1000*0.075
+    
+    def test_mint(self, contract):
+        contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[2]})
+        assert contract.ownerOf(0) == accounts[0].address
+
+    def test_set_description(self, contract):
+        contract.setDescription("Super awesome description", {"from": accounts[2]})
+
+    def test_set_traits(self, contract):
+        contract.setTraits(["T1"], ["V1"], {"from": accounts[2]})
+
+    def test_shatter(self, contract):
+        with reverts("Caller is not owner of token 0"):
+            contract.shatter(10, {"from": accounts[2]})
+
+    def test_fuse(self, contract):
+        with reverts("Can't fuse if not already shattered"):
+            contract.fuse({"from": accounts[2]})
+
 class TestOwnerAccess:
+
+    def test_set_royalty_info(self, contract):
+        contract.setRoyaltyInfo(accounts[3].address, 750, {"from": accounts[0]})
+        (recp, amt) = contract.royaltyInfo(1, 1000)
+        assert recp == accounts[3].address and amt == 1000*0.075
+
+    def test_set_description(self, contract):
+        contract.setDescription("Super awesome description", {"from": accounts[0]})
+
+    def test_set_traits(self, contract):
+        contract.setTraits(["T1"], ["V1"], {"from": accounts[0]})
     
     def test_mint(self, contract):
         contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[0]})
@@ -98,6 +150,9 @@ class TestShatter:
         chain.sleep(t)
         contract.shatter(100, {"from": accounts[0]})
         assert contract.balanceOf(accounts[0].address) == 100
+
+    def test_worst_case_transfer_cost(self, contract):
+        contract.safeTransferFrom(accounts[0].address, accounts[1].address, 100, {"from": accounts[0]})
 
     def test_shatter_again(self, contract):
         with reverts("Already is shattered"):

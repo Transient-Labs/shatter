@@ -42,6 +42,7 @@ contract ShatterCoreV1 is ERC721AUpgradeable, EIP2981AllToken, OwnableUpgradeabl
     uint256 public maxShatters;
     uint256 public shatters;
     uint256 public shatterTime;
+    address public admin;
     string private image;
     string private animationUrl;
     string private description;
@@ -51,16 +52,22 @@ contract ShatterCoreV1 is ERC721AUpgradeable, EIP2981AllToken, OwnableUpgradeabl
     event Shattered(address indexed _user, uint256 indexed _numShatters, uint256 indexed _shatterTime);
     event Fused(address indexed _user, uint256 indexed _fuseTime);
 
+    modifier adminOrOwner {
+        require(msg.sender == admin || msg.sender == owner(), "Address not admin or owner");
+        _;
+    }
+
     /// @notice function to initialize the contract
     /// @param _name is the name of the contract and piece
     /// @param _symbol is the symbol
     /// @param _royaltyRecipient is the royalty recipient
     /// @param _royaltyPercentage is the royalty percentage to set
+    /// @param _admin is the admin address
     /// @param _minShatters is the minimum number of replicates
     /// @param _maxShatters is the maximum number of replicates
     /// @param _shatterTime is time after which replication can occur
     function initialize(string memory _name, string memory _symbol,
-        address _royaltyRecipient, uint256 _royaltyPercentage,
+        address _royaltyRecipient, uint256 _royaltyPercentage, address _admin,
         uint256 _minShatters, uint256 _maxShatters, uint256 _shatterTime)
         public initializerERC721A initializer
     {   
@@ -68,9 +75,48 @@ contract ShatterCoreV1 is ERC721AUpgradeable, EIP2981AllToken, OwnableUpgradeabl
         __Ownable_init();
         royaltyAddr = _royaltyRecipient;
         royaltyPerc = _royaltyPercentage;
-        minShatters = _minShatters;
+        admin = _admin;
+        if (_minShatters < 1) {
+            minShatters = 1;
+        } else {
+            minShatters = _minShatters;
+        }
         maxShatters = _maxShatters;
         shatterTime = _shatterTime;
+    }
+
+    /// @notice function to change the royalty info
+    /// @dev requires admin or owner
+    /// @dev this is useful if the amount was set improperly at contract creation.
+    /// @param newAddr is the new royalty payout addresss
+    /// @param newPerc is the new royalty percentage, in basis points (out of 10,000)
+    function setRoyaltyInfo(address newAddr, uint256 newPerc) external adminOrOwner {
+        _setRoyaltyInfo(newAddr, newPerc);
+    }
+
+    /// @notice function to set the admin address on the contract
+    /// @dev requires owner
+    /// @param _admin is the new admin address
+    function setAdminAddress(address _admin) external onlyOwner {
+        require(_admin != address(0), "New admin cannot be the zero address");
+        admin = _admin;
+    }
+
+    /// @notice function to set the piece description
+    /// @dev requires owner or admin
+    /// @param _description is the new description
+    function setDescription(string calldata _description) external adminOrOwner {
+        description = _description;
+    }
+
+    /// @notice function to set the traits
+    /// @dev requires owner or admin
+    /// @param _traitNames are the names of the traits
+    /// @param _traitValues are the values of each trait, index paired
+    function setTraits(string[] memory _traitNames, string[] memory _traitValues) external adminOrOwner {
+        require(_traitNames.length == _traitValues.length, "Array lengths must be equal");
+        traitNames = _traitNames;
+        traitValues = _traitValues;
     }
 
     /// @notice function for minting the 1/1 to the owner's address
@@ -79,7 +125,7 @@ contract ShatterCoreV1 is ERC721AUpgradeable, EIP2981AllToken, OwnableUpgradeabl
     /// @dev requires that shatters is equal to 0 -> meaning no piece has been minted
     /// @dev using _mint function as owner() should always be an EOA or trusted entity
     function mint(string calldata _description, string calldata _image, string calldata _animationUrl,
-        string[] memory _traitNames, string[] memory _traitValues) external onlyOwner
+        string[] memory _traitNames, string[] memory _traitValues) external adminOrOwner
     {
         require(shatters == 0, "Already minted the first piece");
         require(_traitNames.length == _traitValues.length, "Array lengths must be equal");
