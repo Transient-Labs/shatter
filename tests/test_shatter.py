@@ -1,4 +1,4 @@
-from brownie import Shatter, accounts, reverts, chain
+from brownie import ShatterV1, accounts, reverts, chain
 import pytest
 import base64
 import json
@@ -12,7 +12,7 @@ trait_values = ["V1", "V2", "V3"]
 
 @pytest.fixture(scope="class")
 def contract():
-    return Shatter.deploy("Test", "TST", accounts[1].address, 500, accounts[2].address, 1, 100, shatter_time, {"from": accounts[0]})
+    return ShatterV1.deploy("Test", "TST", accounts[1].address, 500, accounts[2].address, 1, 100, shatter_time, {"from": accounts[0]})
 
 def get_uri(contract, token_id):
     uri = contract.tokenURI(token_id)[29:].encode("utf-8")
@@ -143,6 +143,9 @@ class TestShatter:
         chain.sleep(t)
         contract.shatter(100, {"from": accounts[0]})
         assert contract.balanceOf(accounts[0].address) == 100
+
+    def test_worst_case_transfer_cost(self, contract):
+        contract.safeTransferFrom(accounts[0].address, accounts[1].address, 100, {"from": accounts[0]})
 
     def test_shatter_again(self, contract):
         with reverts("Already is shattered"):
@@ -357,3 +360,9 @@ class TestTokenURIMultipleAnimation:
             "Fused" in tx.events.keys() and
             tx.events["Fused"]["_user"] == accounts[0].address
         )
+
+class TestShatterConstructor:
+
+    def test_zero_min_shatter(self):
+        contract = ShatterV1.deploy("SH", "SH", accounts[1].address, 750, accounts[1].address, 0, 100, 0, {"from": accounts[0]})
+        assert contract.minShatters() == 1

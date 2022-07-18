@@ -28,20 +28,20 @@ _____/\\\\\\\\\\\____/\\\_______________________________________________________
 
 import "chiru-labs/ERC721A@4.0.0/contracts/ERC721A.sol";
 import "Transient-Labs/tl-contract-kit@3.0.0/contracts/royalty/EIP2981AllToken.sol";
-import "OpenZeppelin/openzeppelin-contracts@4.6.0/contracts/access/Ownable.sol";
-import "OpenZeppelin/openzeppelin-contracts@4.6.0/contracts/utils/Base64.sol";
-import "OpenZeppelin/openzeppelin-contracts@4.6.0/contracts/utils/Strings.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/access/Ownable.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/utils/Base64.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/utils/Strings.sol";
 
-contract Shatter is ERC721A, EIP2981AllToken, Ownable {
+contract ShatterV1 is ERC721A, EIP2981AllToken, Ownable {
     using Strings for uint256;
 
     bool public isShattered;
     bool public isFused;
     uint256 public shatterStartIndex;
-    uint256 public immutable minShatters;
-    uint256 public immutable maxShatters;
+    uint256 public minShatters;
+    uint256 public maxShatters;
     uint256 public shatters;
-    uint256 public immutable shatterTime;
+    uint256 public shatterTime;
     address public admin;
     string private image;
     string private animationUrl;
@@ -73,7 +73,11 @@ contract Shatter is ERC721A, EIP2981AllToken, Ownable {
         royaltyAddr = _royaltyRecipient;
         royaltyPerc = _royaltyPercentage;
         admin = _admin;
-        minShatters = _minShatters;
+        if (_minShatters < 1) {
+            minShatters = 1;
+        } else {
+            minShatters = _minShatters;
+        }
         maxShatters = _maxShatters;
         shatterTime = _shatterTime;
     }
@@ -141,7 +145,7 @@ contract Shatter is ERC721A, EIP2981AllToken, Ownable {
     /// @param _shatters is the total number of editions to make. Can be set between minShatters and maxShatters. This number is the total number of editions that will live on this contract
     function shatter(uint256 _shatters) external {
         require(!isShattered, "Already is shattered");
-        require(msg.sender == ERC721A.ownerOf(0), "Caller is not owner of token 0");
+        require(msg.sender == ownerOf(0), "Caller is not owner of token 0");
         require(_shatters >= minShatters && _shatters <= maxShatters, "Cannot set number of editions above max or below the min");
         require(block.timestamp >= shatterTime, "Cannot shatter prior to shatterTime");
 
@@ -168,7 +172,7 @@ contract Shatter is ERC721A, EIP2981AllToken, Ownable {
         require(!isFused, "Already is fused");
         require(isShattered, "Can't fuse if not already shattered");
         for (uint256 i = shatterStartIndex; i < shatterStartIndex + shatters; i++) {
-            require(msg.sender == ERC721A.ownerOf(i), "Msg sender must own all editions");
+            require(msg.sender == ownerOf(i), "Msg sender must own all editions");
             _burn(i);
         }
         isFused = true;
@@ -180,8 +184,8 @@ contract Shatter is ERC721A, EIP2981AllToken, Ownable {
 
     /// @notice function to override tokenURI
     function tokenURI(uint256 tokenId) override public view returns(string memory) {
-        require(ERC721A._exists(tokenId), "URI query for nonexistent token");
-        string memory name = ERC721A.name();
+        require(_exists(tokenId), "URI query for nonexistent token");
+        string memory name = name();
         string memory attr = "[";
         string memory shatterStr = "No";
         string memory fuseStr = "No";

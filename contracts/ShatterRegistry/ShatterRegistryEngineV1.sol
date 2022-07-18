@@ -24,6 +24,7 @@ contract ShatterRegistryEngineV1 is ERC165, OwnableUpgradeable, UUPSUpgradeable 
     address public signer;
     mapping(address => uint256) internal version;
     mapping(address => bool) internal isShatterContract;
+    mapping(address => mapping(bytes32 => bool)) internal nonceUsed;
 
     event Register(address indexed _deployer, address indexed _contract, uint256 indexed _version);
 
@@ -47,11 +48,13 @@ contract ShatterRegistryEngineV1 is ERC165, OwnableUpgradeable, UUPSUpgradeable 
     /// @param _nonce is a number used to create unique signatures
     /// @param _sig is the actual signature to check
     function register(address _deployer, uint256 _version, bytes32 _nonce, bytes memory _sig) external virtual {
+        require(!isShatterContract[msg.sender], "Already registered");
+        require(!nonceUsed[_deployer][_nonce], "Nonce already has been used");
         bytes32 msgHash = _generateMessageHash(_deployer, _version, _nonce);
         require(ECDSA.recover(msgHash, _sig) == signer, "Invalid signature supplied");
-        require(!isShatterContract[msg.sender], "Already registered");
         version[msg.sender] = _version;
         isShatterContract[msg.sender] = true;
+        nonceUsed[_deployer][_nonce] = true;
         emit Register(_deployer, msg.sender, _version);
     }
 

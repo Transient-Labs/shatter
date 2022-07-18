@@ -28,7 +28,7 @@ The `ShatterCreator` folder contains contracts representing the proxy layer of t
 | Network | Address | Version |
 | :-----: | :-----: | :-----: |
 | Mainnet |  | 1 |
-| Rinkeby | 0x3fca9Ff8E92EE202AB541290bFb8aA143052ef0F | 1 |
+| Rinkeby |  | 1 |
 
 #### ShatterRegistry
 Transient Labs has implemented an on-chain registry to authenticate official Shatter contracts. Simply implementing a shatter interface does not stop people from changing core logic and frauding collectors. This is why we have chosen this route.
@@ -38,14 +38,14 @@ The Shatter Registry also implements a proxy-pattern but one that is upgradeable
 ##### Official ShatterRegistry Implementations
 | Network | Address |
 | :-----: | :-----: |
-| Mainnet |  |
+| Mainnet | 0xe02BE21210A6BaC9Db6509037071F1A65CA91C0f |
 | Rinkeby | 0xFa72C510E819cA0C142Ce91973fC2f0739148dEC |
 
 ##### Official ShatterEngine Implementations
 | Network | Address | Engine Version |
 | :-----: | :-----: | :------------: |
-| Mainnet |  | V1 |
-| Rinkeby | 0xF16067FBa7f6177c39dc2c03049408b8D7E8EB92 | V1 |
+| Mainnet | 0x31e91DA8Ec00A9E6d245b308386D18ba9B347f12 | V1 |
+| Rinkeby | 0x83E501025C319ddac7bfC69741BEa5f410566b58 | V1 |
 
 ## Tests
 The tests must be run separate as some tests alter the blockchain timestamp which can cause other test files to fail inadvertently. This can be worked on in the future but is not a great concern at the moment.

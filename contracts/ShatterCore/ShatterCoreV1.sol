@@ -28,9 +28,9 @@ _____/\\\\\\\\\\\____/\\\_______________________________________________________
 
 import "chiru-labs/ERC721A-Upgradeable@4.1.0/contracts/ERC721AUpgradeable.sol";
 import "Transient-Labs/tl-contract-kit@3.0.0/contracts/royalty/EIP2981AllToken.sol";
-import "OpenZeppelin/openzeppelin-contracts-upgradeable@4.6.0/contracts/access/OwnableUpgradeable.sol";
-import "OpenZeppelin/openzeppelin-contracts-upgradeable@4.6.0/contracts/utils/Base64Upgradeable.sol";
-import "OpenZeppelin/openzeppelin-contracts-upgradeable@4.6.0/contracts/utils/StringsUpgradeable.sol";
+import "OpenZeppelin/openzeppelin-contracts-upgradeable@4.7.0/contracts/access/OwnableUpgradeable.sol";
+import "OpenZeppelin/openzeppelin-contracts-upgradeable@4.7.0/contracts/utils/Base64Upgradeable.sol";
+import "OpenZeppelin/openzeppelin-contracts-upgradeable@4.7.0/contracts/utils/StringsUpgradeable.sol";
 
 contract ShatterCoreV1 is ERC721AUpgradeable, EIP2981AllToken, OwnableUpgradeable {
     using StringsUpgradeable for uint256;

@@ -67,6 +67,17 @@ class TestRegistry:
         tf, version = contract.lookup(accounts[1].address)
         assert tf and version == 1
 
-    
+    def test_register_already_registered(self, contract):
+        nonce = token_hex(32)
+        sig = signer.sign(["address", "uint256", "bytes32"], [accounts[2].address, 1, nonce]).signature
+        with reverts("Already registered"):
+            contract.register(accounts[2].address, 1, nonce, sig, {"from": accounts[1]})
+
+    def test_register_same_nonce(self, contract):
+        nonce = token_hex(32)
+        sig = signer.sign(["address", "uint256", "bytes32"], [accounts[3].address, 1, nonce]).signature
+        contract.register(accounts[3].address, 1, nonce, sig, {"from": accounts[4]})
+        with reverts("Nonce already has been used"):
+            contract.register(accounts[3].address, 1, nonce, sig, {"from": accounts[3]})
 
     
