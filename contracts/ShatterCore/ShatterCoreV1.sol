@@ -109,6 +109,20 @@ contract ShatterCoreV1 is ERC721AUpgradeable, EIP2981AllToken, OwnableUpgradeabl
         description = _description;
     }
 
+    /// @notice function to set the piece image
+    /// @dev requires owner
+    /// @param _image is the new image
+    function setImage(string calldata _image) external onlyOwner {
+        image = _image;
+    }
+
+    /// @notice function to set the piece aniumation url
+    /// @dev requires owner
+    /// @param _animation is the new image
+    function setAnimation(string calldata _animation) external onlyOwner {
+        animationUrl = _animation;
+    }
+
     /// @notice function to set the traits
     /// @dev requires owner or admin
     /// @param _traitNames are the names of the traits

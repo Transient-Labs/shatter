@@ -28,7 +28,7 @@ The `ShatterCreator` folder contains contracts representing the proxy layer of t
 | Network | Address | Version |
 | :-----: | :-----: | :-----: |
 | Mainnet |  | 1 |
-| Rinkeby | 0x30ADc1c2911D02202a5e0Bc9A1E411040939afce | 1 |
+| Rinkeby | 0xdB733ea1Bf6a8DCD1318903E17e500EA38aA006d | 1 |
 
 #### ShatterRegistry
 Transient Labs has implemented an on-chain registry to authenticate official Shatter contracts. Simply implementing a shatter interface does not stop people from changing core logic and frauding collectors. This is why we have chosen this route.
@@ -41,7 +41,7 @@ The Shatter Registry also implements a proxy-pattern but one that is upgradeable
 | Mainnet | 0xe02BE21210A6BaC9Db6509037071F1A65CA91C0f |
 | Rinkeby | 0xFa72C510E819cA0C142Ce91973fC2f0739148dEC |
 
-##### Official ShatterEngine Implementations
+##### Official ShatterRegistryEngine Implementations
 | Network | Address | Engine Version |
 | :-----: | :-----: | :------------: |
 | Mainnet | 0x31e91DA8Ec00A9E6d245b308386D18ba9B347f12 | V1 |

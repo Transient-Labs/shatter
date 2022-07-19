@@ -64,6 +64,10 @@ class TestInterface:
     
 class TestNoAccess:
 
+    def test_initialize_non_admin_owner(self, contract):
+        with reverts("ERC721A__Initializable: contract is already initialized"):
+            contract.initialize("newName", "NAME", accounts[3].address, 1000, accounts[3].address, 1, 100, 0, {"from": accounts[3]})
+
     def test_set_royalty_info_non_admin_owner(self, contract):
         with reverts("Address not admin or owner"):
             contract.setRoyaltyInfo(accounts[3].address, 750, {"from": accounts[3]})
@@ -81,11 +85,24 @@ class TestNoAccess:
         with reverts("Address not admin or owner"):
             contract.setTraits(["T1"], ["V1"], {"from": accounts[3]})
 
+    def test_set_image_non_admin_owner(self, contract):
+        with reverts("Ownable: caller is not the owner"):
+            contract.setImage("newImage", {"from": accounts[3]})
+
+    def test_set_animation_non_admin_owner(self, contract):
+        with reverts("Ownable: caller is not the owner"):
+            contract.setAnimation("newAnimation", {"from": accounts[3]})
+
     def test_mint_non_admin_owner(self, contract):
         with reverts("Address not admin or owner"):
             contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[3]})
 
 class TestAdminAccess:
+
+    def test_initialize(self, contract):
+        with reverts("ERC721A__Initializable: contract is already initialized"):
+            contract.initialize("newName", "NAME", accounts[3].address, 1000, accounts[3].address, 1, 100, 0, {"from": accounts[2]})
+
     def test_set_royalty_info(self, contract):
         contract.setRoyaltyInfo(accounts[3].address, 750, {"from": accounts[2]})
         (recp, amt) = contract.royaltyInfo(1, 1000)
@@ -101,6 +118,14 @@ class TestAdminAccess:
     def test_set_traits(self, contract):
         contract.setTraits(["T1"], ["V1"], {"from": accounts[2]})
 
+    def test_set_image(self, contract):
+        with reverts("Ownable: caller is not the owner"):
+            contract.setImage("newImage", {"from": accounts[2]})
+
+    def test_set_animation(self, contract):
+        with reverts("Ownable: caller is not the owner"):
+            contract.setAnimation("newAnimation", {"from": accounts[2]})
+
     def test_shatter(self, contract):
         with reverts("Caller is not owner of token 0"):
             contract.shatter(10, {"from": accounts[2]})
@@ -110,6 +135,10 @@ class TestAdminAccess:
             contract.fuse({"from": accounts[2]})
 
 class TestOwnerAccess:
+
+    def test_initialize(self, contract):
+        with reverts("ERC721A__Initializable: contract is already initialized"):
+            contract.initialize("newName", "NAME", accounts[3].address, 1000, accounts[3].address, 1, 100, 0, {"from": accounts[0]})
 
     def test_set_royalty_info(self, contract):
         contract.setRoyaltyInfo(accounts[3].address, 750, {"from": accounts[0]})
@@ -121,6 +150,12 @@ class TestOwnerAccess:
 
     def test_set_traits(self, contract):
         contract.setTraits(["T1"], ["V1"], {"from": accounts[0]})
+
+    def test_set_image(self, contract):
+        contract.setImage("newImage", {"from": accounts[0]})
+    
+    def test_set_animation(self, contract):
+        contract.setAnimation("newAnimation", {"from": accounts[0]})
     
     def test_mint(self, contract):
         contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[0]})

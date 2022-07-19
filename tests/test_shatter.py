@@ -70,6 +70,14 @@ class TestNoAccess:
         with reverts("Address not admin or owner"):
             contract.setDescription("Super interesting description", {"from": accounts[3]})
 
+    def test_set_image_non_admin_owner(self, contract):
+        with reverts("Ownable: caller is not the owner"):
+            contract.setImage("newImage", {"from": accounts[3]})
+
+    def test_set_animation_non_admin_owner(self, contract):
+        with reverts("Ownable: caller is not the owner"):
+            contract.setAnimation("newAnimation", {"from": accounts[3]})
+
     def test_set_traits_non_admin_owner(self, contract):
         with reverts("Address not admin or owner"):
             contract.setTraits(["T1"], ["V1"], {"from": accounts[3]})
@@ -94,6 +102,14 @@ class TestAdminAccess:
     def test_set_traits(self, contract):
         contract.setTraits(["T1"], ["V1"], {"from": accounts[2]})
 
+    def test_set_image(self, contract):
+        with reverts("Ownable: caller is not the owner"):
+            contract.setImage("newImage", {"from": accounts[2]})
+
+    def test_set_animation(self, contract):
+        with reverts("Ownable: caller is not the owner"):
+            contract.setAnimation("newAnimation", {"from": accounts[2]})
+
     def test_shatter(self, contract):
         with reverts("Caller is not owner of token 0"):
             contract.shatter(10, {"from": accounts[2]})
@@ -114,6 +130,12 @@ class TestOwnerAccess:
 
     def test_set_traits(self, contract):
         contract.setTraits(["T1"], ["V1"], {"from": accounts[0]})
+
+    def test_set_image(self, contract):
+        contract.setImage("newImage", {"from": accounts[0]})
+    
+    def test_set_animation(self, contract):
+        contract.setAnimation("newAnimation", {"from": accounts[0]})
     
     def test_mint(self, contract):
         contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[0]})
