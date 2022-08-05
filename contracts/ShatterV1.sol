@@ -1,10 +1,10 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: Apache-2.0
 
 /// @title Shatter
 /// @notice Original shatter implementation - base contract for custom shatter contracts
-/// @author Transient Labs
+/// @author transientlabs.xyz
 
-pragma solidity ^0.8.9;
+pragma solidity >0.8.9 <0.9.0;
 
 /*
 _____/\\\\\\\\\\\____/\\\_________________________________________________________________________________        
@@ -26,7 +26,7 @@ _____/\\\\\\\\\\\____/\\\_______________________________________________________
 /_/ /_/  \_,_/_//_/___/_/\__/_//_/\__/ /____/\_,_/_.__/___/                                                           
 */
 
-import "chiru-labs/ERC721A@4.0.0/contracts/ERC721A.sol";
+import "chiru-labs/ERC721A@4.1.0/contracts/ERC721A.sol";
 import "Transient-Labs/tl-contract-kit@3.0.0/contracts/royalty/EIP2981AllToken.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/access/Ownable.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/utils/Base64.sol";

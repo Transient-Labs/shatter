@@ -1,8 +1,8 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: Apache-2.0
 
 /// @title Shatter Core Version 1
 /// @notice Core logic implementation of Shatter Core - Version 1
-/// @author Transient Labs
+/// @author transientlabs.xyz
 
 pragma solidity ^0.8.9;
 

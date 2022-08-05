@@ -51,4 +51,4 @@ The Shatter Registry also implements a proxy-pattern but one that is upgradeable
 The tests must be run separate as some tests alter the blockchain timestamp which can cause other test files to fail inadvertently. This can be worked on in the future but is not a great concern at the moment.
 
 ## License
-This project is licensed under GPL-3.0
+This project is licensed under the Apache-2.0 license
