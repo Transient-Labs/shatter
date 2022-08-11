@@ -14,8 +14,8 @@ We use [eth-brownie](https://github.com/eth-brownie/brownie) for our development
 
 ### Contracts
 The base ERC721 contract is `ERC721S.sol`. This was forked from OpenZeppelin. This was done to implement an efficient batch mint while keeping all transfer costs low. ERC721A was initially used but any Shatters above 150 have expensive transfer costs associated. The Shatter implementation was able to reduce costs by about 50% for this speicific implementation (more details below). The two changes implemented in `ERC721S.sol` are as follows:
-    1. `_owners` and `_balances` variable scope were changed to `internal`
-    2. All calls to `ERC721.ownerOf` were changed to `ownerOf` as this function is reimplemented in each Shatter contract for efficient batch minting
+1. `_owners` and `_balances` variable scope were changed to `internal`
+2. All calls to `ERC721.ownerOf` were changed to `ownerOf` as this function is reimplemented in each Shatter contract for efficient batch minting
 
 The main implementations of Shatter contracts are in the main `contracts` folder. Each Shatter is called `ShatterV<version>.sol`, such as `ShatterV1.sol` and `ShatterV2.sol`.
 
