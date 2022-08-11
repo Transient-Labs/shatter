@@ -13,7 +13,20 @@ For more high level information, please visit [our website](https://transientlab
 We use [eth-brownie](https://github.com/eth-brownie/brownie) for our development environment. All contracts are in the `contracts` folder and tests are in the `tests` folder.
 
 ### Contracts
-The main shatter contract was developed as `Shatter.sol`. This contract is at the root level of the contracts folder and serves as a template for Transient Labs to build custom Shatter contracts.
+The base ERC721 contract is `ERC721S.sol`. This was forked from OpenZeppelin. This was done to implement an efficient batch mint while keeping all transfer costs low. ERC721A was initially used but any Shatters above 150 have expensive transfer costs associated. The Shatter implementation was able to reduce costs by about 50% for this speicific implementation (more details below). The two changes implemented in `ERC721S.sol` are as follows:
+    1. `_owners` and `_balances` variable scope were changed to `internal`
+    2. All calls to `ERC721.ownerOf` were changed to `ownerOf` as this function is reimplemented in each Shatter contract for efficient batch minting
+
+The main implementations of Shatter contracts are in the main `contracts` folder. Each Shatter is called `ShatterV<version>.sol`, such as `ShatterV1.sol` and `ShatterV2.sol`.
+
+#### Gas Comparison Using ERC721S.sol versus ERC721A.sol
+The following values are worst case values found during testing. Both Shatter test with 100 tokens and fuse back to 1 token. Both tests for safeTransferFrom transfer token id 100.
+| Function | ShatterV1.sol with ERC721S.sol | ShatterV1.sol with ERC721A.sol | Savings with ERC721S.sol |
+| :------: | :------: | :-----: | :-----: |
+| mint | 333079 | 351239 | 5.17% |
+| shatter | 278763 | 320002 | 12.89% |
+| fuse | 1740811 | 3491396 | 50.14% |
+| safeTransferFrom | 83809 | 167281 | 49.90% |
 
 Further within this folder, there are folders for implementing proxy patterns and a shatter registry.
 
@@ -28,7 +41,9 @@ The `ShatterCreator` folder contains contracts representing the proxy layer of t
 | Network | Address | Version |
 | :-----: | :-----: | :-----: |
 | Mainnet |  | 1 |
-| Rinkeby | 0xdB733ea1Bf6a8DCD1318903E17e500EA38aA006d | 1 |
+| Rinkeby |  | 1 |
+| Mainnet |  | 2 |
+| Rinkeby |  | 2 |
 
 #### ShatterRegistry
 Transient Labs has implemented an on-chain registry to authenticate official Shatter contracts. Simply implementing a shatter interface does not stop people from changing core logic and frauding collectors. This is why we have chosen this route.
