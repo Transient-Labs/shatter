@@ -72,7 +72,8 @@ contract ShatterV2 is ERC721S, EIP2981AllToken, Ownable {
         ERC721S(name, symbol)
         EIP2981AllToken(royaltyRecipient, royaltyPercentage)
         Ownable()
-    {  
+    {
+        require(num >= 1, "Cannot deploy a shatter contract with 0 shatters");
         adminAddress = admin;
         numShatters = num;
         shatterTime = time;

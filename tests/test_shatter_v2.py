@@ -482,3 +482,8 @@ class TestTokenURI:
         for i in range(1, 101):
             uri_tf = uri_tf and contract.tokenURI(i) == f"newerURI/{i}"
         assert uri_tf
+
+class TestZeroShatterDeployment:
+    def test_zero_shatters(self):
+        with reverts("Cannot deploy a shatter contract with 0 shatters"):
+            ShatterV2.deploy("ZERO", "ZRO", accounts[0].address, 1000, accounts[1].address, 0, 0, {"from": accounts[0]})
