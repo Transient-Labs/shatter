@@ -469,7 +469,7 @@ class TestTokenURI:
         contract.mint("newURI/", {"from": accounts[0]})
         assert contract.tokenURI(0) == "newURI/0"
 
-    def test_shatter_to_one_of_one(self, contract):
+    def test_shatter(self, contract):
         contract.shatter({"from": accounts[0]})
         uri_tf = True
         for i in range(1, 101):

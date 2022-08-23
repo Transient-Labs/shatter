@@ -26,11 +26,13 @@ _____/\\\\\\\\\\\____/\\\_______________________________________________________
 /_/ /_/  \_,_/_//_/___/_/\__/_//_/\__/ /____/\_,_/_.__/___/
 */
 
-import "./ERC721S.sol";
+import "../ERC721S.sol";
 import "Transient-Labs/tl-contract-kit@6.1.0/contracts/royalty/EIP2981AllToken.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/access/Ownable.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/utils/Base64.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/utils/Strings.sol";
 
-contract ShatterV1 is ERC721S, EIP2981AllToken, Ownable {
+contract ShatterV1_B64 is ERC721S, EIP2981AllToken, Ownable {
     using Strings for uint256;
 
     bool public isShattered;
@@ -41,7 +43,11 @@ contract ShatterV1 is ERC721S, EIP2981AllToken, Ownable {
     uint256 public shatterTime;
     address public adminAddress;
     address private _shatterAddress;
-    string private _baseUri;
+    string private _image;
+    string private _animationUrl;
+    string private _description;
+    string[] private _traitNames;
+    string[] private _traitValues;
 
     event Shattered(address indexed user, uint256 indexed numShatters, uint256 indexed shatteredTime);
     event Fused(address indexed user, uint256 indexed fuseTime);
@@ -112,11 +118,35 @@ contract ShatterV1 is ERC721S, EIP2981AllToken, Ownable {
         adminAddress = newAdmin;
     }
 
-    /// @notice function to set base uri
+    /// @notice function to set the piece description
+    /// @dev requires owner or admin
+    /// @param newDescription is the new description
+    function setDescription(string calldata newDescription) external adminOrOwner {
+        _description = newDescription;
+    }
+
+    /// @notice function to set the piece image
     /// @dev requires owner
-    /// @param newUri is the new base uri
-    function setBaseURI(string memory newUri) public onlyOwner {
-        _setBaseUri(newUri);
+    /// @param newImage is the new image
+    function setImage(string calldata newImage) external onlyOwner {
+        _image = newImage;
+    }
+
+    /// @notice function to set the piece aniumation url
+    /// @dev requires owner
+    /// @param newAnimation is the new image
+    function setAnimation(string calldata newAnimation) external onlyOwner {
+        _animationUrl = newAnimation;
+    }
+
+    /// @notice function to set the traits
+    /// @dev requires owner or admin
+    /// @param newTraits are the names of the traits
+    /// @param newValues are the values of each trait, index paired
+    function setTraits(string[] memory newTraits, string[] memory newValues) external adminOrOwner {
+        require(newTraits.length == newValues.length, "Array lengths must be equal");
+        _traitNames = newTraits;
+        _traitValues = newValues;
     }
 
     /// @notice function for minting the 1/1 to the owner's address
@@ -124,9 +154,23 @@ contract ShatterV1 is ERC721S, EIP2981AllToken, Ownable {
     /// @dev sets the description, image, animation url (if exists), and traits for the piece
     /// @dev requires that shatters is equal to 0 -> meaning no piece has been minted
     /// @dev using _mint function as owner() should always be an EOA or trusted entity that can receive ERC721 tokens
-    function mint(string memory newUri) external adminOrOwner {
+    function mint(
+        string calldata newDescription,
+        string calldata newImage,
+        string calldata newAnimation,
+        string[] memory newTraits,
+        string[] memory newValues
+    )
+        external
+        adminOrOwner
+    {
         require(shatters == 0, "Already minted the first piece");
-        _setBaseUri(newUri);
+        require(newTraits.length == newValues.length, "Array lengths must be equal");
+        _description = newDescription;
+        _image = newImage;
+        _animationUrl = newAnimation;
+        _traitNames = newTraits;
+        _traitValues = newValues;
         shatters = 1;
         _mint(owner(), 0);
     }
@@ -180,6 +224,58 @@ contract ShatterV1 is ERC721S, EIP2981AllToken, Ownable {
         emit Fused(sender, block.timestamp);
     }
 
+    /// @notice function to override tokenURI
+    function tokenURI(uint256 tokenId) override public view returns(string memory) {
+        require(_exists(tokenId), "URI query for nonexistent token");
+        string memory name = name();
+        string memory attr = "[";
+        string memory shatterStr = "No";
+        string memory fuseStr = "No";
+        for (uint256 i; i < _traitNames.length; i++) {
+            attr = string(abi.encodePacked(attr, '{"trait_type": "', _traitNames[i], '", "value": "', _traitValues[i], '"},'));
+        }
+        if (shatters > 1) {
+            shatterStr = "Yes";
+            name = string(abi.encodePacked(name, ' #', tokenId.toString(), '/', shatters.toString()));
+            attr = string(abi.encodePacked(attr, '{"trait_type": "Edition", "value": "', tokenId.toString(), '"},{"trait_type": "Shattered", "value": "', shatterStr, '"},{"trait_type": "Fused", "value": "', fuseStr, '"}'));
+        } else {
+            if (isShattered) {
+                shatterStr = "Yes";
+            }
+            if (isFused) {
+                fuseStr = "Yes";
+            }
+            attr = string(abi.encodePacked(attr, '{"trait_type": "Shattered", "value": "', shatterStr, '"},{"trait_type": "Fused", "value": "', fuseStr, '"}'));
+        }
+        attr = string(abi.encodePacked(attr, "]"));
+        if (bytes(_animationUrl).length == 0) {
+            return string(
+                abi.encodePacked(
+                    "data:application/json;base64,",
+                    Base64.encode(bytes(abi.encodePacked(
+                        unicode'{"name": "', name, '",',
+                        unicode'"description": "', _description, '",',
+                        unicode'"attributes": ', attr, ',',
+                        '"image": "', _image, '"}'
+                    )))
+                )
+            );
+        } else {
+            return string(
+                abi.encodePacked(
+                    "data:application/json;base64,",
+                    Base64.encode(bytes(abi.encodePacked(
+                        unicode'{"name": "', name, '",',
+                        unicode'"description": "', _description, '",',
+                        unicode'"attributes": ', attr, ',',
+                        '"image": "', _image, '",',
+                        '"animation_url": "', _animationUrl, '"}'
+                    )))
+                )
+            );
+        }
+    }
+
     /// @notice overrides supportsInterface function
     /// @param interfaceId is supplied from anyone/contract calling this function, as defined in ERC 165
     /// @return boolean saying if this contract supports the interface or not
@@ -230,15 +326,5 @@ contract ShatterV1 is ERC721S, EIP2981AllToken, Ownable {
         for (uint256 id = 1; id < quantity + 1; id++) {
             emit Transfer(address(0), shatterExecutor, id);
         }
-    }
-
-    /// @notice function to set base uri internally
-    function _setBaseUri(string memory newUri) internal {
-        _baseUri = newUri;
-    }
-
-    /// @notice override _baseURI() function from ERC721A
-    function _baseURI() internal view override returns (string memory) {
-        return _baseUri;
     }
 }

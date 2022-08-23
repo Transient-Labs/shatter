@@ -5,27 +5,10 @@ import json
 from random import randint
 
 shatter_time = int(chain.time() + 2 * 3600)
-desc = "An amazing description"
-img = "ipfs://IMAGE"
-anim = "ipfs://ANIM"
-trait_names = ["T1", "T2", "T3"]
-trait_values = ["V1", "V2", "V3"]
 
 @pytest.fixture(scope="class")
 def contract():
     return ShatterV1.deploy("Test", "TST", accounts[1].address, 500, accounts[2].address, 1, 100, shatter_time, {"from": accounts[0]})
-
-def get_uri(contract, token_id):
-    uri = contract.tokenURI(token_id)[29:].encode("utf-8")
-    decoded_uri = base64.b64decode(uri).decode("utf-8")
-    json_uri = json.loads(decoded_uri)
-    return json_uri
-
-def get_trait_dict(attributes):
-    traits = dict()
-    for attribute in attributes:
-        traits[attribute["trait_type"]] = attribute["value"]
-    return traits
 
 class TestDefault:
 
@@ -74,7 +57,7 @@ class TestERC721Init:
         assert contract.symbol() == "TST"
 
     def test_token_uri_no_tokens(self, contract):
-        with reverts("URI query for nonexistent token"):
+        with reverts("ERC721: invalid token ID"):
             contract.tokenURI(0)
 
     def test_approve_no_tokens(self, contract):
@@ -122,25 +105,9 @@ class TestNoUserAccess:
         with reverts("Ownable: caller is not the owner"):
             contract.setAdminAddress(accounts[1].address, {"from": accounts[3]})
 
-    def test_set_descriptionr(self, contract):
-        with reverts("Address not admin or owner"):
-            contract.setDescription("Super interesting description", {"from": accounts[3]})
-
-    def test_set_image(self, contract):
-        with reverts("Ownable: caller is not the owner"):
-            contract.setImage("newImage", {"from": accounts[3]})
-
-    def test_set_animation(self, contract):
-        with reverts("Ownable: caller is not the owner"):
-            contract.setAnimation("newAnimation", {"from": accounts[3]})
-
-    def test_set_traits(self, contract):
-        with reverts("Address not admin or owner"):
-            contract.setTraits(["T1"], ["V1"], {"from": accounts[3]})
-
     def test_mint(self, contract):
         with reverts("Address not admin or owner"):
-            contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[3]})
+            contract.mint("test/", {"from": accounts[3]})
 
 class TestAdminAccess:
 
@@ -153,22 +120,8 @@ class TestAdminAccess:
             contract.setAdminAddress(accounts[1].address, {"from": accounts[2]})
   
     def test_mint(self, contract):
-        contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[2]})
+        contract.mint("test/", {"from": accounts[2]})
         assert contract.ownerOf(0) == accounts[0].address
-
-    def test_set_description(self, contract):
-        contract.setDescription("Super awesome description", {"from": accounts[2]})
-
-    def test_set_traits(self, contract):
-        contract.setTraits(["T1"], ["V1"], {"from": accounts[2]})
-
-    def test_set_image(self, contract):
-        with reverts("Ownable: caller is not the owner"):
-            contract.setImage("newImage", {"from": accounts[2]})
-
-    def test_set_animation(self, contract):
-        with reverts("Ownable: caller is not the owner"):
-            contract.setAnimation("newAnimation", {"from": accounts[2]})
 
     def test_shatter(self, contract):
         with reverts("Caller is not owner of token 0"):
@@ -196,31 +149,19 @@ class TestOwnerAccess:
     def test_set_admin(self, contract):
         contract.setAdminAddress(accounts[1].address, {"from": accounts[0]})
         assert contract.adminAddress() == accounts[1].address
-
-    def test_set_description(self, contract):
-        contract.setDescription("Super awesome description", {"from": accounts[0]})
-
-    def test_set_traits(self, contract):
-        contract.setTraits(["T1"], ["V1"], {"from": accounts[0]})
-
-    def test_set_image(self, contract):
-        contract.setImage("newImage", {"from": accounts[0]})
-    
-    def test_set_animation(self, contract):
-        contract.setAnimation("newAnimation", {"from": accounts[0]})
     
     def test_mint(self, contract):
-        contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[0]})
+        contract.mint("test/", {"from": accounts[0]})
         assert contract.ownerOf(0) == accounts[0].address
 
 class TestERC721AfterMint:
     def test_mint(self, contract):
-        contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[0]})
+        contract.mint("test/", {"from": accounts[0]})
         assert contract.ownerOf(0) == accounts[0].address and contract.balanceOf(accounts[0].address) == 1
 
     def test_mint_again(self, contract):
         with reverts("Already minted the first piece"):
-            contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[0]})
+            contract.mint("test/", {"from": accounts[0]})
 
     def test_approve_token_0(self, contract):
         tx = contract.approve(accounts[5].address, 0, {"from": accounts[0]})
@@ -315,7 +256,7 @@ class TestERC721AfterMint:
 class TestShatter:
 
     def test_shatter_non_owner(self, contract):
-        contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[0]})
+        contract.mint("test/", {"from": accounts[0]})
         with reverts("Caller is not owner of token 0"):
             contract.shatter(10, {"from": accounts[1]})
 
@@ -350,7 +291,7 @@ class TestShatter:
 class TestShatterByFirstBuyer:
 
     def test_shatter(self, contract):
-        contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[0]})
+        contract.mint("test/", {"from": accounts[0]})
         contract.safeTransferFrom(accounts[0].address, accounts[5].address, 0, {"from": accounts[0]})
         contract.shatter(10, {"from": accounts[5]})
         assert contract.balanceOf(accounts[5].address) == 10
@@ -358,7 +299,7 @@ class TestShatterByFirstBuyer:
 class TestShatterMultipleTransfers:
 
     def test_shatter(self, contract):
-        contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[0]})
+        contract.mint("test/", {"from": accounts[0]})
         contract.safeTransferFrom(accounts[0].address, accounts[5].address, 0, {"from": accounts[0]})
         contract.safeTransferFrom(accounts[5].address, accounts[6].address, 0, {"from": accounts[5]})
         contract.shatter(10, {"from": accounts[6]})
@@ -366,7 +307,7 @@ class TestShatterMultipleTransfers:
 
 class TestERC721MultiShatter:
     def test_mint_and_shatter(self, contract):
-        tx1 = contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[0]})
+        tx1 = contract.mint("test/", {"from": accounts[0]})
         tx2 = contract.shatter(100, {"from": accounts[0]})
         owner_tf = True
         for i in range(1, 101):
@@ -410,7 +351,7 @@ class TestERC721MultiShatter:
 
 class TestERC721SingleShatter:
     def test_mint_and_shatter(self, contract):
-        tx1 = contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[0]})
+        tx1 = contract.mint("test/", {"from": accounts[0]})
         tx2 = contract.shatter(1, {"from": accounts[0]})
         assert(
             contract.ownerOf(0) == accounts[0].address and
@@ -421,7 +362,7 @@ class TestERC721SingleShatter:
 
     def test_mint_again(self, contract):
         with reverts("Already minted the first piece"):
-            contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[0]})
+            contract.mint("test/", {"from": accounts[0]})
 
     def test_approve_token_0(self, contract):
         tx = contract.approve(accounts[5].address, 0, {"from": accounts[0]})
@@ -515,7 +456,7 @@ class TestERC721SingleShatter:
 
 class TestFuse:
     def test_fuse_not_shattered(self, contract):
-        contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[0]})
+        contract.mint("test/", {"from": accounts[0]})
         with reverts("Can't fuse if not already shattered"):
             contract.fuse({"from": accounts[0]})
 
@@ -544,7 +485,7 @@ class TestFuse:
 
 class TestERC721BuyerFuse:
     def test_mint_shatter_fuse(self, contract):
-        tx1 = contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[0]})
+        tx1 = contract.mint("test/", {"from": accounts[0]})
         tx2 = contract.shatter(75, {"from": accounts[0]})
         owner_tf = True
         for i in range(1, 76):
@@ -566,7 +507,7 @@ class TestERC721BuyerFuse:
 
     def test_mint_again(self, contract):
         with reverts("Already minted the first piece"):
-            contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[0]})
+            contract.mint("test/", {"from": accounts[0]})
 
     def test_approve_token_0(self, contract):
         tx = contract.approve(accounts[5].address, 0, {"from": accounts[0]})
@@ -660,7 +601,7 @@ class TestERC721BuyerFuse:
 
 class TestERC721CreatorFuse:
     def test_mint_shatter_fuse(self, contract):
-        tx1 = contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[0]})
+        tx1 = contract.mint("test/", {"from": accounts[0]})
         tx2 = contract.shatter(50, {"from": accounts[0]})
         tx3 = contract.fuse({"from": accounts[0]})
         assert(
@@ -673,7 +614,7 @@ class TestERC721CreatorFuse:
 
     def test_mint_again(self, contract):
         with reverts("Already minted the first piece"):
-            contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[0]})
+            contract.mint("test/", {"from": accounts[0]})
 
     def test_approve_token_0(self, contract):
         tx = contract.approve(accounts[5].address, 0, {"from": accounts[0]})
@@ -765,169 +706,41 @@ class TestERC721CreatorFuse:
             contract.balanceOf(accounts[8].address) == 1
         )
 
-class TestTokenURISingleImage:
+class TestTokenURI:
     def test_token_uri_init(self, contract):
-        contract.mint(desc, img, "", trait_names, trait_values, {"from": accounts[0]})
-        uri = get_uri(contract, 0)
-        traits = get_trait_dict(uri["attributes"])
-        assert (
-            uri["name"] == "Test" and
-            uri["description"] == desc and
-            uri["image"] == img and
-            traits["Shattered"] == "No" and
-            traits["Fused"] == "No" and
-            traits["T1"] == "V1" and
-            traits["T2"] == "V2" and
-            traits["T3"] == "V3"
-        )
+        contract.mint("newURI/", {"from": accounts[0]})
+        assert contract.tokenURI(0) == "newURI/0"
 
-    def test_shatter_to_one_of_one(self, contract):
-        tx = contract.shatter(1, {"from": accounts[0]})
-        uri = get_uri(contract, 0)
-        traits = get_trait_dict(uri["attributes"])
-        assert (
-            contract.balanceOf(accounts[0].address) == 1 and
-            contract.ownerOf(0) == accounts[0].address and
-            uri["name"] == "Test" and
-            uri["description"] == desc and
-            uri["image"] == img and
-            traits["Shattered"] == "Yes" and
-            traits["Fused"] == "Yes" and
-            traits["T1"] == "V1" and
-            traits["T2"] == "V2" and
-            traits["T3"] == "V3" and
-            "Shattered" in tx.events.keys() and
-            tx.events["Shattered"]["user"] == accounts[0].address and
-            tx.events["Shattered"]["numShatters"] == 1 and
-            "Fused" in tx.events.keys() and
-            tx.events["Fused"]["user"] == accounts[0].address
-        ) 
+    def test_shatter(self, contract):
+        contract.shatter(100, {"from": accounts[0]})
+        uri_tf = True
+        for i in range(1, 101):
+            uri_tf = uri_tf and contract.tokenURI(i) == f"newURI/{i}"
+        assert uri_tf
 
-class TestTokenURIMultipleImageOnly:
-    def test_shatter_half_max(self, contract):
-        contract.mint(desc, img, "", trait_names, trait_values, {"from": accounts[0]})
-        tx = contract.shatter(50, {"from": accounts[0]})
-        uri = get_uri(contract, 1)
-        traits = get_trait_dict(uri["attributes"])
-        assert (
-            contract.balanceOf(accounts[0].address) == 50 and
-            uri["name"] == "Test #1/50" and
-            uri["description"] == desc and
-            uri["image"] == img and
-            traits["Edition"] == "1" and
-            traits["Shattered"] == "Yes" and
-            traits["Fused"] == "No" and
-            traits["T1"] == "V1" and
-            traits["T2"] == "V2" and
-            traits["T3"] == "V3" and
-            "Shattered" in tx.events.keys() and
-            tx.events["Shattered"]["user"] == accounts[0].address and
-            tx.events["Shattered"]["numShatters"] == 50 and
-            "Fused" not in tx.events.keys()
-        )
-    
+    def test_set_base_uri(self, contract):
+        contract.setBaseURI("newerURI/", {"from": accounts[0]})
+        uri_tf = True
+        for i in range(1, 101):
+            uri_tf = uri_tf and contract.tokenURI(i) == f"newerURI/{i}"
+        assert uri_tf
+
     def test_fuse(self, contract):
-        tx = contract.fuse({"from": accounts[0]})
-        uri = get_uri(contract, 0)
-        traits = get_trait_dict(uri["attributes"])
-        assert (
-            contract.balanceOf(accounts[0].address) == 1 and
-            uri["name"] == "Test" and
-            uri["description"] == desc and
-            uri["image"] == img and
-            traits["Shattered"] == "Yes" and
-            traits["Fused"] == "Yes" and
-            traits["T1"] == "V1" and
-            traits["T2"] == "V2" and
-            traits["T3"] == "V3" and
-            "Shattered" not in tx.events.keys() and
-            "Fused" in tx.events.keys() and
-            tx.events["Fused"]["user"] == accounts[0].address
-        )
+        contract.fuse({"from": accounts[0]})
+        assert contract.tokenURI(0) == "newerURI/0"
 
-class TestTokenURISingleAnimation:
+class TestTokenURIOneOfOne:
     def test_token_uri_init(self, contract):
-        contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[0]})
-        uri = get_uri(contract, 0)
-        traits = get_trait_dict(uri["attributes"])
-        assert (
-            uri["name"] == "Test" and
-            uri["description"] == desc and
-            uri["image"] == img and
-            uri["animation_url"] == anim and
-            traits["Shattered"] == "No" and
-            traits["Fused"] == "No" and
-            traits["T1"] == "V1" and
-            traits["T2"] == "V2" and
-            traits["T3"] == "V3"
-        )
+        contract.mint("newURI/", {"from": accounts[0]})
+        assert contract.tokenURI(0) == "newURI/0"
 
-    def test_shatter_to_one_of_one(self, contract):
-        tx = contract.shatter(1, {"from": accounts[0]})
-        uri = get_uri(contract, 0)
-        traits = get_trait_dict(uri["attributes"])
-        assert (
-            contract.balanceOf(accounts[0].address) == 1 and
-            contract.ownerOf(0) == accounts[0].address and
-            uri["name"] == "Test" and
-            uri["description"] == desc and
-            uri["image"] == img and
-            uri["animation_url"] == anim and
-            traits["Shattered"] == "Yes" and
-            traits["Fused"] == "Yes" and
-            traits["T1"] == "V1" and
-            traits["T2"] == "V2" and
-            traits["T3"] == "V3" and
-            "Shattered" in tx.events.keys() and
-            tx.events["Shattered"]["user"] == accounts[0].address and
-            tx.events["Shattered"]["numShatters"] == 1 and
-            "Fused" in tx.events.keys() and
-            tx.events["Fused"]["user"] == accounts[0].address
-        ) 
+    def test_shatter(self, contract):
+        contract.shatter(1, {"from": accounts[0]})
+        assert contract.tokenURI(0) == "newURI/0"
 
-class TestTokenURIMultipleAnimation:
-    def test_shatter_half_max(self, contract):
-        contract.mint(desc, img, anim, trait_names, trait_values, {"from": accounts[0]})
-        tx = contract.shatter(50, {"from": accounts[0]})
-        uri = get_uri(contract, 1)
-        traits = get_trait_dict(uri["attributes"])
-        assert (
-            contract.balanceOf(accounts[0].address) == 50 and
-            uri["name"] == "Test #1/50" and
-            uri["description"] == desc and
-            uri["image"] == img and
-            uri["animation_url"] == anim and
-            traits["Edition"] == "1" and
-            traits["Shattered"] == "Yes" and
-            traits["Fused"] == "No" and
-            traits["T1"] == "V1" and
-            traits["T2"] == "V2" and
-            traits["T3"] == "V3" and
-            "Shattered" in tx.events.keys() and
-            tx.events["Shattered"]["user"] == accounts[0].address and
-            tx.events["Shattered"]["numShatters"] == 50 and
-            "Fused" not in tx.events.keys()
-        )
-    
-    def test_fuse(self, contract):
-        tx = contract.fuse({"from": accounts[0]})
-        uri = get_uri(contract, 0)
-        traits = get_trait_dict(uri["attributes"])
-        assert (
-            contract.balanceOf(accounts[0].address) == 1 and
-            uri["name"] == "Test" and
-            uri["description"] == desc and
-            uri["image"] == img and
-            uri["animation_url"] == anim and
-            traits["Shattered"] == "Yes" and
-            traits["Fused"] == "Yes" and
-            traits["T1"] == "V1" and
-            traits["T2"] == "V2" and
-            traits["T3"] == "V3" and
-            "Shattered" not in tx.events.keys() and
-            "Fused" in tx.events.keys() and
-            tx.events["Fused"]["user"] == accounts[0].address
-        )
+    def test_set_base_uri(self, contract):
+        contract.setBaseURI("newerURI/", {"from": accounts[0]})
+        assert contract.tokenURI(0) == "newerURI/0"
 
 class TestShatterConstructor:
 
