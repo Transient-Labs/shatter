@@ -104,10 +104,22 @@ class TestNoUserAccess:
     def test_set_admin_address(self, contract):
         with reverts("Ownable: caller is not the owner"):
             contract.setAdminAddress(accounts[1].address, {"from": accounts[3]})
+    
+    def test_set_base_uri(self, contract):
+        with reverts("Ownable: caller is not the owner"):
+            contract.setBaseURI("newURI/", {"from": accounts[3]})
 
     def test_mint(self, contract):
         with reverts("Address not admin or owner"):
             contract.mint("test/", {"from": accounts[3]})
+
+    def test_shatter(self, contract):
+        with reverts("ERC721: invalid token ID"):
+            contract.shatter(20, {"from": accounts[3]})
+
+    def test_fuse(self, contract):
+        with reverts("Can't fuse if not already shattered"):
+            contract.fuse({"from": accounts[3]})
 
 class TestAdminAccess:
 
@@ -118,6 +130,10 @@ class TestAdminAccess:
     def test_set_admin_address(self, contract):
         with reverts("Ownable: caller is not the owner"):
             contract.setAdminAddress(accounts[1].address, {"from": accounts[2]})
+
+    def test_set_base_uri(self, contract):
+        with reverts("Ownable: caller is not the owner"):
+            contract.setBaseURI("newURI/", {"from": accounts[2]})
   
     def test_mint(self, contract):
         contract.mint("test/", {"from": accounts[2]})
@@ -149,6 +165,9 @@ class TestOwnerAccess:
     def test_set_admin(self, contract):
         contract.setAdminAddress(accounts[1].address, {"from": accounts[0]})
         assert contract.adminAddress() == accounts[1].address
+
+    def test_set_base_uri(self, contract):
+        contract.setBaseURI("newURI/", {"from": accounts[0]})
     
     def test_mint(self, contract):
         contract.mint("test/", {"from": accounts[0]})
