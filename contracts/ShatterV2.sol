@@ -194,6 +194,7 @@ contract ShatterV2 is ERC721S, EIP2981AllToken, Ownable {
         for (uint256 id = 1; id < quantity + 1; id++) {
             emit Transfer(address(0), shatterExecutor, id);
         }
+        // TODO replace with consecutive transfer
     }
 
     /// @notice function to set base uri internally
